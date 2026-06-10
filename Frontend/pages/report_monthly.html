@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OiM Nexus · Reporte Mensual · {{ nombre_region }}</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="loader-overlay">
+      <div class="loader-box">
+        <div class="spinner-big"></div>
+        <div class="loader-text">Procesando OiM Nexus — Reporte Mensual</div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="logo-text">YOFC</div>
+          <div class="logo-sep"></div>
+          <div class="sys-name">OiM Nexus</div>
+        </div>
+        <div class="region-tabs-top">
+          <a
+            href="/mensual/SM"
+            class="reg-top-btn {% if region_code == 'SM' %}active{% endif %}"
+            >San Martín</a
+          >
+          <a
+            href="/mensual/AR"
+            class="reg-top-btn {% if region_code == 'AR' %}active{% endif %}"
+            >Arequipa</a
+          >
+          <a
+            href="/mensual/LL"
+            class="reg-top-btn {% if region_code == 'LL' %}active{% endif %}"
+            >La Libertad</a
+          >
+          <a
+            href="/mensual/AN"
+            class="reg-top-btn {% if region_code == 'AN' %}active{% endif %}"
+            >Áncash</a
+          >
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+
+      <div class="deadline-bar" id="deadlineBar" style="display: none">
+        <i class="fas fa-bell"></i>
+        <span class="ddl-label">PPT Pronatel —</span>
+        <span class="ddl-time" id="deadlineTime">—</span>
+        <span class="ddl-label" style="opacity: 0.7"
+          >hasta el viernes 12:00 PM</span
+        >
+      </div>
+
+      <div class="category-bar">
+        <a href="/documentos/{{ region_code }}" class="cat-pill"
+          >Avance Documentos</a
+        >
+        <div class="vista-dropdown" id="vistaDropdown">
+          <button class="vista-trigger" onclick="toggleVistaMenu()">
+            <i class="fas fa-eye"></i> Vista: Mensual
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="vista-menu" id="vistaMenu">
+            <a href="/diario/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-day"></i>Diario
+            </a>
+            <a href="/semanal/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-week"></i>Semanal
+            </a>
+            <a href="/mensual/{{ region_code }}" class="vista-menu-item active">
+              <i class="fas fa-calendar-alt"></i>Mensual
+              <i class="fas fa-check"></i>
+            </a>
+            <a href="/anual/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-chart-line"></i>Anual
+            </a>
+          </div>
+        </div>
+        <a href="/resumen/{{ region_code }}" class="cat-pill"
+          >Resumen General</a
+        >
+      </div>
+
+      <div class="main">
+        <div class="sidebar">
+          <div class="sb-title">🛠 Filtros Operativos</div>
+          <div class="sla-card">
+            <div class="sla-card-label">
+              SLA Base · <span id="slaTipo">TX</span>
+            </div>
+            <div class="sla-card-val"><span id="slaVal">0.8667</span> h</div>
+            <div class="sla-card-desc">Umbral fijo por nodo por mes</div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Tipo de Red</div>
+            <select class="filter-select" id="selTipoRed">
+              <option value="TX">Solo TX (POP)</option>
+              <option value="AX">Solo AX</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Vista de Datos</div>
+            <select class="filter-select" id="selFuente">
+              <option value="TSC">🎭 TSC (Pronatel)</option>
+              <option value="REAL">🔒 REAL (uso interno)</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Desde</div>
+            <input type="date" class="filter-input" id="fDesde" />
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Hasta</div>
+            <input type="date" class="filter-input" id="fHasta" />
+          </div>
+          <button class="sb-btn sb-btn-primary" onclick="cargarTabla()">
+            <i class="fas fa-rotate"></i> Aplicar Filtros
+          </button>
+          <div class="sb-sep"></div>
+          <div
+            style="
+              font-size: 10px;
+              color: var(--muted);
+              line-height: 1.5;
+              padding: 10px;
+              background: var(--bg);
+              border-radius: 6px;
+            "
+          >
+            <strong>📌 Cómo leer:</strong><br />
+            Cada columna es un <strong>mes calendario</strong>. Las celdas
+            muestran las horas atribuibles a YOFC en ese mes. Default: últimos 6
+            meses.
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="view-title">Reporte Mensual — {{ nombre_region }}</div>
+          <div class="view-subtitle" id="subtitulo">Cargando datos…</div>
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-table"></i> Tabla Pivot — Atribuibilidad YOFC
+                por Mes
+              </div>
+              <div style="display: flex; gap: 6px">
+                <button
+                  class="sb-btn"
+                  onclick="exportarExcel()"
+                  style="
+                    padding: 5px 10px;
+                    background: #fff;
+                    color: var(--blue);
+                    border: 1px solid var(--blue);
+                    margin: 0;
+                  "
+                >
+                  <i class="fas fa-file-excel"></i> Excel
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div id="tablaMensualWrap">
+                <div class="no-data">⏳ Cargando tabla...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OiM Nexus · Reporte Diario · {{ nombre_region }}</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- LOADER -->
+    <div id="loader-overlay">
+      <div class="loader-box">
+        <div class="loader-scene">
+          <div class="scene-label left">Google Drive</div>
+          <div class="server-box">
+            <div class="disk">
+              <span class="led green"></span><span class="led"></span
+              ><span class="led yellow"></span>
+            </div>
+            <div class="disk">
+              <span class="led"></span><span class="led blue"></span
+              ><span class="led"></span>
+            </div>
+            <div class="disk">
+              <span class="led green"></span><span class="led"></span
+              ><span class="led blue"></span>
+            </div>
+            <div class="bar-pulse"></div>
+          </div>
+          <div class="pipe">
+            <div class="packet p1"></div>
+            <div class="packet p2"></div>
+            <div class="packet p3"></div>
+          </div>
+          <div class="receiver-box">
+            <div class="receiver-fill" id="receiverFill"></div>
+            <div class="receiver-label">OiM<br />NEXUS</div>
+          </div>
+          <div class="scene-label right">Reporte</div>
+        </div>
+        <div class="loader-text" id="loaderText">
+          Conectando a Google Drive…
+        </div>
+        <div class="loader-progress-wrap">
+          <div class="loader-progress" id="loaderProgress"></div>
+        </div>
+        <div class="loader-pct" id="loaderPct">0%</div>
+      </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN REAL -->
+    <div class="modal-overlay" id="modalReal">
+      <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-eye-slash"></i></div>
+        <div class="modal-title">Vista REAL — Uso interno</div>
+        <div class="modal-body">
+          Estás a punto de ver los valores <strong>reales</strong> de
+          atribuibilidad YOFC. Esta información es de uso interno y
+          <strong>no debe compartirse con Pronatel</strong>. ¿Confirmas
+          continuar?
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn" onclick="cancelarReal()">Cancelar</button>
+          <button class="modal-btn danger" onclick="confirmarReal()">
+            Sí, mostrar REAL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PRÓXIMAMENTE -->
+    <div class="modal-overlay" id="modalProx">
+      <div class="modal-box" style="border-top-color: var(--blue)">
+        <div
+          class="modal-icon"
+          style="background: var(--blue-l); color: var(--blue)"
+        >
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="modal-title" style="color: var(--blue)">Próximamente</div>
+        <div class="modal-body">
+          El resumen ejecutivo en PDF maquetado estará disponible en una versión
+          futura. Por ahora puedes usar PDF (imprimir) o exportar a Excel.
+        </div>
+        <div class="modal-actions">
+          <button
+            class="modal-btn"
+            onclick="
+              document.getElementById('modalProx').classList.remove('show')
+            "
+          >
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ANÁLISIS POR NODOS -->
+    <div class="modal-overlay" id="modalNodo">
+      <div class="modal-nodo">
+        <div class="modal-nodo-header">
+          <div class="modal-nodo-title">
+            <i class="fas fa-microscope"></i>&nbsp; Análisis por Nodos
+          </div>
+          <button class="modal-nodo-close" onclick="cerrarModalNodo()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-nodo-body" id="modalNodoBody">
+          <div class="nodo-selector">
+            <div class="filter-label" style="margin-bottom: 6px">
+              Seleccione un nodo del Top 10:
+            </div>
+            <select id="selNodo" onchange="cargarDetalleNodo()"></select>
+          </div>
+          <div id="nodoDetalleContent">
+            <div class="no-data">
+              Selecciona un nodo para ver su detalle completo.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="logo-text">YOFC</div>
+          <div class="logo-sep"></div>
+          <div class="sys-name">OiM Nexus</div>
+        </div>
+        <div class="region-tabs-top">
+          <a
+            href="/diario/SM"
+            class="reg-top-btn {% if region_code == 'SM' %}active{% endif %}"
+            >San Martín</a
+          >
+          <a
+            href="/diario/AR"
+            class="reg-top-btn {% if region_code == 'AR' %}active{% endif %}"
+            >Arequipa</a
+          >
+          <a
+            href="/diario/LL"
+            class="reg-top-btn {% if region_code == 'LL' %}active{% endif %}"
+            >La Libertad</a
+          >
+          <a
+            href="/diario/AN"
+            class="reg-top-btn {% if region_code == 'AN' %}active{% endif %}"
+            >Áncash</a
+          >
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+
+      <!-- DEADLINE BAR (fila propia) -->
+      <div class="deadline-bar" id="deadlineTopbar" style="display: none">
+        <i class="fas fa-bell"></i>
+        <span class="ddl-label">PPT Pronatel —</span>
+        <span class="ddl-time" id="deadlineTimeTb">—</span>
+        <span class="ddl-label" style="opacity: 0.7"
+          >hasta el viernes 12:00 PM</span
+        >
+      </div>
+
+      <!-- BANNER MARQUEE DE ALERTAS YOFC -->
+      <div id="yofc-banner">
+        <div class="yofc-banner-prefix">
+          <i class="fas fa-bell"></i>CONTRALORÍA
+        </div>
+        <div class="yofc-banner-content">
+          <div class="yofc-banner-text" id="yofcBannerText">
+            Cargando alertas…
+          </div>
+        </div>
+        <div
+          class="yofc-banner-close"
+          onclick="cerrarBannerYofc()"
+          title="Ocultar"
+        >
+          <i class="fas fa-times"></i>
+        </div>
+      </div>
+
+      <!-- MODAL POPUP ALERTAS YOFC -->
+      <div class="modal-overlay" id="modalAlertasYofc" style="display: none">
+        <div class="modal-alertas-yofc">
+          <div class="mal-yofc-header">
+            <div class="mal-yofc-title">
+              <i class="fas fa-bell"></i>Alertas Contraloría — Códigos YOFC sin
+              DONE
+            </div>
+            <button class="mal-yofc-close" onclick="cerrarModalAlertasYofc()">
+              &times;
+            </button>
+          </div>
+          <div class="mal-yofc-body">
+            <div class="mal-yofc-summary" id="malYofcSummary"></div>
+            <div id="malYofcLista"></div>
+          </div>
+          <div class="mal-yofc-footer">
+            <div class="mal-yofc-footer-note">
+              Plazo máximo: 3 días hábiles desde el fin del evento
+            </div>
+            <button class="btn-recordar" onclick="recordarAlertasYofc()">
+              <i class="fas fa-clock"></i> Recordar en 5 min
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-bar">
+        <div class="cat-pills">
+          <a href="/documentos/{{ region_code }}" class="cat-pill"
+            >Avance Documentos</a
+          >
+          <div class="vista-dropdown" id="vistaDropdown">
+            <button class="vista-trigger" onclick="toggleVistaMenu()">
+              <i class="fas fa-eye"></i> Vista: Diario
+              <i class="fas fa-caret-down"></i>
+            </button>
+            <div class="vista-menu" id="vistaMenu">
+              <a
+                href="/diario/{{ region_code }}"
+                class="vista-menu-item active"
+              >
+                <i class="fas fa-calendar-day"></i>Diario
+                <i class="fas fa-check"></i>
+              </a>
+              <a href="/semanal/{{ region_code }}" class="vista-menu-item">
+                <i class="fas fa-calendar-week"></i>Semanal
+              </a>
+              <a href="/mensual/{{ region_code }}" class="vista-menu-item">
+                <i class="fas fa-calendar-alt"></i>Mensual
+              </a>
+              <a href="/anual/{{ region_code }}" class="vista-menu-item">
+                <i class="fas fa-chart-line"></i>Anual
+              </a>
+            </div>
+          </div>
+          <a href="/resumen/{{ region_code }}" class="cat-pill"
+            >Resumen General</a
+          >
+        </div>
+        <div class="fuente-toggle">
+          <span class="fuente-label">Vista:</span>
+          <div class="fuente-switch" onclick="togglearFuente()">
+            <div class="fuente-opt active" id="optTSC">🎭 TSC</div>
+            <div class="fuente-opt" id="optREAL">🔒 REAL</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="sidebar">
+          <div class="sb-title">🛠 Filtros Operativos</div>
+
+          <div class="sla-card">
+            <div class="sla-card-label">
+              SLA Base · <span id="slaTipo">TX</span>
+            </div>
+            <div class="sla-card-val"><span id="slaVal">0.8667</span> h</div>
+            <div class="sla-card-desc">
+              Umbral fijo de indisponibilidad permitida por nodo
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-label">Tipo de Red</div>
+            <select class="filter-select" id="selTipoRed">
+              <option value="TX">Solo TX (POP)</option>
+              <option value="AX">Solo AX</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-label">Año - Mes</div>
+            <select
+              class="filter-select"
+              id="selAnioMes"
+              onchange="cambiarAnioMes()"
+            ></select>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-label">Desde</div>
+            <input type="date" class="filter-input" id="fDesde" />
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Hasta</div>
+            <input type="date" class="filter-input" id="fHasta" />
+          </div>
+
+          <!-- Contador de deadline (más adelante en sidebar via JS) -->
+          <div class="deadline-box" id="deadlineBox" style="display: none">
+            <div class="deadline-box-title">
+              <i class="fas fa-bell"></i> Cuenta regresiva PPT
+            </div>
+            <div class="deadline-box-time" id="deadlineCount">—</div>
+            <div class="deadline-box-meta" id="deadlineMeta">
+              Deadline: viernes 12:00 PM
+            </div>
+          </div>
+
+          <button class="sb-btn sb-btn-primary" onclick="cargarTodo()">
+            <i class="fas fa-rotate"></i> Cambiar
+          </button>
+
+          <button class="sb-btn sb-btn-secondary" onclick="abrirModalNodo()">
+            <i class="fas fa-microscope"></i> Análisis por Nodos
+          </button>
+
+          <button
+            class="yofc-alert-btn"
+            id="yofcAlertBtn"
+            onclick="abrirModalAlertasYofc()"
+            style="display: none"
+          >
+            <i class="fas fa-bell"></i> Alertas Contraloría
+            <span class="yofc-alert-badge">0</span>
+          </button>
+
+          <div style="position: relative">
+            <button
+              class="sb-btn sb-btn-export"
+              onclick="togglearExportMenu(event)"
+            >
+              <i class="fas fa-file-export"></i> Reporte General
+              <i class="fas fa-caret-down" style="margin-left: auto"></i>
+            </button>
+            <div class="export-menu" id="exportMenu">
+              <a href="#" onclick="exportarPDF(event)"
+                ><i class="fas fa-file-pdf"></i> Exportar a PDF</a
+              >
+              <a href="#" onclick="exportarExcel(event)"
+                ><i class="fas fa-file-excel"></i> Exportar a Excel</a
+              >
+              <a href="#" onclick="exportarPptTop10(event)"
+                ><i class="fas fa-file-powerpoint" style="color: #d04423"></i>
+                Exportar PPT — Top 10 (Tabla + Gráfica)</a
+              >
+              <a href="#" onclick="mostrarProximamente(event)"
+                ><i class="fas fa-clock"></i> Resumen ejecutivo
+                (próximamente)</a
+              >
+            </div>
+          </div>
+
+          <div class="sb-sep"></div>
+
+          <div class="deadline-card" id="deadlineCard" style="display: none">
+            <div class="deadline-title">⏰ Deadline</div>
+            <div class="deadline-msg" id="deadlineMsg">Viernes 12:00 PM</div>
+          </div>
+
+          <div
+            style="
+              font-size: 10px;
+              color: var(--muted);
+              line-height: 1.5;
+              padding: 10px;
+              background: var(--bg);
+              border-radius: 6px;
+            "
+          >
+            <strong>📌 Cómo leer:</strong><br />
+            El SLA define cuánta caída se tolera por nodo. Si un nodo lo supera,
+            el % indica cuántas veces por encima del límite está.
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="view-title">
+            Reporte Diario de Disponibilidad — {{ nombre_region }}
+          </div>
+          <div class="view-subtitle">
+            <span id="lblFuente">Vista TSC (Pronatel)</span> ·
+            <span id="lblRango">— período —</span> ·
+            <span id="lblNodos">— nodos analizados</span>
+          </div>
+
+          <div class="alerts-banner" id="alertsBanner"></div>
+
+          <!-- SECCIÓN 1: Top 10 Horas -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-chart-bar"></i> Top 10 Sitios con Mayor
+                Atribuible a YOFC (Horas)
+              </div>
+              <div class="section-actions">
+                <button
+                  class="btn-mini"
+                  onclick="descargarChart('chartTop10', 'top10-horas')"
+                >
+                  <i class="fas fa-download"></i> PNG
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="chart-wrap"><canvas id="chartTop10"></canvas></div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: Indisponibilidad -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-percentage"></i> Top 10 Indisponibilidad vs SLA
+                Base
+              </div>
+              <div class="section-actions">
+                <button
+                  class="btn-mini active"
+                  id="btnPct"
+                  onclick="cambiarVistaIndispo('pct')"
+                >
+                  %
+                </button>
+                <button
+                  class="btn-mini"
+                  id="btnHoras"
+                  onclick="cambiarVistaIndispo('horas')"
+                >
+                  Horas
+                </button>
+                <button
+                  class="btn-mini"
+                  onclick="descargarChart('chartIndispo', 'top10-indispo')"
+                >
+                  <i class="fas fa-download"></i> PNG
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="chart-wrap"><canvas id="chartIndispo"></canvas></div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: Tabla de Desglose Top10 -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-table"></i> Tabla de Desglose — Top 10 con
+                Justificados
+              </div>
+              <div class="section-actions">
+                <button class="btn-mini" onclick="exportarTablaDesglose()">
+                  <i class="fas fa-file-excel"></i> Exportar
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--muted);
+                  margin-bottom: 12px;
+                "
+              >
+                <strong>AVAIL</strong> = SLA Base − OOS (negativo = excedió SLA)
+                · <strong>TOTAL</strong> = OOS + Justificados ·
+                <strong>JUSTIF</strong> = horas con motivo justificado por
+                analista · <strong>Click en nodo</strong> abre análisis
+                detallado
+              </div>
+              <div class="tabla-desglose-wrap" id="tablaDesgloseWrap">
+                <div class="no-data">Cargando…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 4: Alertas Detalladas -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-exclamation-triangle"></i> Alertas Detalladas
+              </div>
+            </div>
+            <div class="section-body">
+              <div id="alertasDetalle"></div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 5: Top 3 Acumulado Histórico -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-chart-line"></i> Top 3 Acumulado Histórico
+              </div>
+              <div class="section-actions">
+                <button class="btn-mini" onclick="exportarTablaAcumulada()">
+                  <i class="fas fa-file-excel"></i> Exportar
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--muted);
+                  margin-bottom: 12px;
+                "
+              >
+                <strong>Período fijo:</strong>
+                <span id="acumPeriodo">desde 01/08/2025 hasta hoy</span> ·
+                Independiente del filtro de fechas · Click en nodo abre análisis
+                detallado
+              </div>
+              <div class="tabla-desglose-wrap" id="tablaAcumuladaWrap">
+                <div class="no-data">Cargando…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

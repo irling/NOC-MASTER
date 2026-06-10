@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OiM Nexus · Avance Documentos · {{ region_code }}</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/Frontend/css/main_page_documents.css" />
+    <script src="/Frontend/js/main_page_documents.js"></script>
+  </head>
+  <body>
+    <!----------------------POP UP LOADER
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Procesando OiM Nexus — Matriz Documental</div>
+    </div>
+      ---------------------->
+
+    <div class="modal-overlay" id="modalAlertasYofc">
+      <div class="modal-alertas-yofc">
+        <div class="mal-yofc-header">
+          <div class="mal-yofc-title">
+            <i class="fas fa-bell"></i>Alertas Contraloría — Códigos YOFC sin
+            DONE
+          </div>
+          <button class="mal-yofc-close" onclick="cerrarModalAlertasYofc()">
+            &times;
+          </button>
+        </div>
+        <div class="mal-yofc-body">
+          <div class="mal-yofc-summary" id="malYofcSummary"></div>
+          <div id="malYofcLista"></div>
+        </div>
+        <div class="mal-yofc-footer">
+          <div class="mal-yofc-footer-note">
+            Plazo: 3 días hábiles desde el fin del evento
+          </div>
+          <button class="btn-recordar" onclick="recordarAlertasYofc()">
+            <i class="fas fa-clock"></i> Recordar en 5 min
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="logo-text">
+            <span style="color: var(--pink)">Y</span
+            ><span style="color: var(--yellow)">O</span
+            ><span style="color: var(--green)">F</span
+            ><span style="color: var(--blue)">C</span>
+          </div>
+          <div class="logo-sep"></div>
+          <div class="sys-name">OiM Nexus</div>
+        </div>
+        <div class="region-tabs-top">
+          <a href="/documentos/SM" class="reg-top-btn id-reg-SM">San Martín</a>
+          <a href="/documentos/AR" class="reg-top-btn id-reg-AR">Arequipa</a>
+          <a href="/documentos/LL" class="reg-top-btn id-reg-LL">La Libertad</a>
+          <a href="/documentos/AN" class="reg-top-btn id-reg-AN">Áncash</a>
+        </div>
+        <div class="topbar-right">
+          <div class="clock" id="clock">--:--:--</div>
+        </div>
+      </div>
+
+      <div class="deadline-bar" id="deadlineBar" style="display: none">
+        <i class="fas fa-bell"></i>
+        <span class="ddl-label">PPT Pronatel —</span>
+        <span class="ddl-time" id="deadlineTime">—</span>
+        <span class="ddl-label" style="opacity: 0.7"
+          >hasta el viernes 12:00 PM</span
+        >
+      </div>
+
+      <div id="yofc-banner">
+        <div class="yofc-banner-prefix">
+          <i class="fas fa-bell"></i>CONTRALORÍA
+        </div>
+        <div class="yofc-banner-content">
+          <div class="yofc-banner-text" id="yofcBannerText">
+            Cargando alertas…
+          </div>
+        </div>
+        <div
+          class="yofc-banner-close"
+          onclick="cerrarBannerYofc()"
+          title="Ocultar"
+        >
+          <i class="fas fa-times"></i>
+        </div>
+      </div>
+
+      <div class="category-bar">
+        <a href="/documentos/{{ region_code }}" class="cat-pill active"
+          >Avance Documentos</a
+        >
+        <div class="vista-dropdown" id="vistaDropdown">
+          <button class="vista-trigger" onclick="toggleVistaMenu()">
+            <i class="fas fa-eye"></i> Vista: Diario
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="vista-menu" id="vistaMenu">
+            <a href="/diario/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-day"></i>Diario
+            </a>
+            <a href="/semanal/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-week"></i>Semanal
+            </a>
+            <a href="/mensual/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-alt"></i>Mensual
+            </a>
+            <a href="/anual/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-chart-line"></i>Anual
+            </a>
+          </div>
+        </div>
+        <a href="/resumen/{{ region_code }}" class="cat-pill"
+          >Resumen General</a
+        >
+      </div>
+
+      <div class="main">
+        <div class="sidebar">
+          <div class="sidebar-scroll">
+            <div class="sb-title">Filtros Operativos</div>
+
+            <div class="filter-group">
+              <div class="filter-label">Tipo Red</div>
+              <select
+                class="filter-select"
+                id="selTipoRed"
+                onchange="runAnalysis()"
+              >
+                <option value="AX">Solo AX (CPE)</option>
+                <option value="TX">Solo TX (POP)</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-label">Año - Mes</div>
+              <select
+                class="filter-select"
+                id="selAnioMes"
+                onchange="onCambioAnioMes()"
+              ></select>
+            </div>
+
+            <div class="sb-sep"></div>
+            <div class="sb-title">Rango Personalizado</div>
+            <div class="filter-group">
+              <div class="filter-label">Desde</div>
+              <input
+                type="date"
+                class="filter-input"
+                id="dateDesde"
+                onchange="runAnalysis()"
+              />
+            </div>
+            <div class="filter-group">
+              <div class="filter-label">Hasta</div>
+              <input
+                type="date"
+                class="filter-input"
+                id="dateHasta"
+                onchange="runAnalysis()"
+              />
+            </div>
+
+            <div class="sb-sep"></div>
+
+            <div class="sb-title" style="color: var(--pink)">
+              <i class="fas fa-shield-alt" style="margin-right: 5px"></i
+              >Contraloría de Calidad
+            </div>
+            <div class="alert-counter" id="alertCounter">
+              <div class="alert-chip gray">Cargando...</div>
+            </div>
+            <div class="alert-list" id="alertList">
+              <div class="alert-none">Cargando alertas...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="action-header">
+            <div>
+              <div class="view-title">Matriz de Monitoreo Documental</div>
+              <div class="view-subtitle">
+                Solo eventos con <strong>PRIMARY = OK</strong> · Contraloría
+                activa sobre toda la BD
+              </div>
+            </div>
+            <button class="exp-btn" onclick="exportExcel()">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
+          </div>
+
+          <div class="tsc-cards" id="tscCards">
+            <div class="tsc-card c0">
+              <div class="tsc-label">Cargando</div>
+              <div class="tsc-val">—</div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="pivot-table" id="matrixTable">
+              <thead>
+                <tr>
+                  <th>Semana</th>
+                  <th>Motivo TSC</th>
+                  <th style="text-align: center">DONE</th>
+                  <th style="text-align: center">ONGOING</th>
+                  <th style="text-align: center">PENDING</th>
+                  <th style="text-align: center">Total OK</th>
+                  <th style="text-align: center">Suma Total</th>
+                </tr>
+              </thead>
+              <tbody id="matrixBody">
+                <tr>
+                  <td
+                    colspan="7"
+                    style="
+                      text-align: center;
+                      padding: 40px;
+                      color: var(--muted);
+                    "
+                  >
+                    Cargando datos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

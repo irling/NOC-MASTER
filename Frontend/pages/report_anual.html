@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OiM Nexus · Reporte Anual · {{ nombre_region }}</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="loader-overlay">
+      <div class="loader-box">
+        <div class="spinner-big"></div>
+        <div class="loader-text">Procesando OiM Nexus — Reporte Anual</div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="logo-text">YOFC</div>
+          <div class="logo-sep"></div>
+          <div class="sys-name">OiM Nexus</div>
+        </div>
+        <div class="region-tabs-top">
+          <a
+            href="/anual/SM"
+            class="reg-top-btn {% if region_code == 'SM' %}active{% endif %}"
+            >San Martín</a
+          >
+          <a
+            href="/anual/AR"
+            class="reg-top-btn {% if region_code == 'AR' %}active{% endif %}"
+            >Arequipa</a
+          >
+          <a
+            href="/anual/LL"
+            class="reg-top-btn {% if region_code == 'LL' %}active{% endif %}"
+            >La Libertad</a
+          >
+          <a
+            href="/anual/AN"
+            class="reg-top-btn {% if region_code == 'AN' %}active{% endif %}"
+            >Áncash</a
+          >
+        </div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+
+      <div class="deadline-bar" id="deadlineBar" style="display: none">
+        <i class="fas fa-bell"></i>
+        <span class="ddl-label">PPT Pronatel —</span>
+        <span class="ddl-time" id="deadlineTime">—</span>
+        <span class="ddl-label" style="opacity: 0.7"
+          >hasta el viernes 12:00 PM</span
+        >
+      </div>
+
+      <div class="category-bar">
+        <a href="/documentos/{{ region_code }}" class="cat-pill"
+          >Avance Documentos</a
+        >
+        <div class="vista-dropdown" id="vistaDropdown">
+          <button class="vista-trigger" onclick="toggleVistaMenu()">
+            <i class="fas fa-eye"></i> Vista: Anual
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="vista-menu" id="vistaMenu">
+            <a href="/diario/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-day"></i>Diario
+            </a>
+            <a href="/semanal/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-week"></i>Semanal
+            </a>
+            <a href="/mensual/{{ region_code }}" class="vista-menu-item">
+              <i class="fas fa-calendar-alt"></i>Mensual
+            </a>
+            <a href="/anual/{{ region_code }}" class="vista-menu-item active">
+              <i class="fas fa-chart-line"></i>Anual
+              <i class="fas fa-check"></i>
+            </a>
+          </div>
+        </div>
+        <a href="/resumen/{{ region_code }}" class="cat-pill"
+          >Resumen General</a
+        >
+      </div>
+
+      <div class="main">
+        <div class="sidebar">
+          <div class="sb-title">📊 Filtros Anuales</div>
+          <div class="sla-card">
+            <div class="sla-card-label">
+              SLA Base · <span id="slaTipo">TX</span>
+            </div>
+            <div class="sla-card-val"><span id="slaVal">0.8667</span> h</div>
+            <div class="sla-card-desc">Umbral fijo por nodo por mes</div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Año</div>
+            <select class="filter-select" id="selAnio">
+              <option>Cargando…</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Tipo de Red</div>
+            <select class="filter-select" id="selTipoRed">
+              <option value="TX">Solo TX (POP)</option>
+              <option value="AX">Solo AX</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="filter-label">Vista de Datos</div>
+            <select class="filter-select" id="selFuente">
+              <option value="TSC">🎭 TSC (Pronatel)</option>
+              <option value="REAL">🔒 REAL (uso interno)</option>
+            </select>
+          </div>
+          <button class="sb-btn sb-btn-primary" onclick="cargarTodo()">
+            <i class="fas fa-rotate"></i> Aplicar Filtros
+          </button>
+          <div
+            style="
+              margin-top: 14px;
+              font-size: 10px;
+              color: var(--muted);
+              line-height: 1.5;
+              padding: 10px;
+              background: var(--bg);
+              border-radius: 6px;
+            "
+          >
+            <strong>📌 Vista ejecutiva YTD:</strong><br />
+            KPIs del año seleccionado con evolución mensual y los 10 nodos más
+            críticos.
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="view-title">Reporte Anual — {{ nombre_region }}</div>
+          <div class="view-subtitle" id="subtitulo">
+            Cargando datos del año…
+          </div>
+
+          <!-- KPIs principales -->
+          <div class="kpi-grid">
+            <div class="kpi-card blue">
+              <div class="kpi-label">📊 Total Horas YTD</div>
+              <div class="kpi-value">
+                <span id="kpiHoras">0</span><span class="kpi-suffix">h</span>
+              </div>
+              <div class="kpi-detail" id="kpiHorasDet">
+                Atribuibles YOFC del año
+              </div>
+            </div>
+            <div class="kpi-card pink">
+              <div class="kpi-label">📡 Nodos Afectados</div>
+              <div class="kpi-value" id="kpiNodos">0</div>
+              <div class="kpi-detail" id="kpiNodosDet">
+                Con eventos en el año
+              </div>
+            </div>
+            <div class="kpi-card green">
+              <div class="kpi-label">✅ % SLA Cumplido</div>
+              <div class="kpi-value">
+                <span id="kpiSLA">0</span><span class="kpi-suffix">%</span>
+              </div>
+              <div class="kpi-detail" id="kpiSLADet">
+                Nodos dentro del umbral
+              </div>
+            </div>
+            <div class="kpi-card yellow">
+              <div class="kpi-label">⚠️ Mes Más Crítico</div>
+              <div class="kpi-value" id="kpiMesPeor">—</div>
+              <div class="kpi-detail" id="kpiMesPeorDet">
+                Mayor cantidad de horas
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfica línea evolución mensual -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-chart-line"></i> Evolución Mensual — Horas
+                Atribuibles YOFC
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="chart-wrap">
+                <canvas id="chartEvolucion"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 10 nodos -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">
+                <i class="fas fa-fire"></i> Top 10 Nodos Más Críticos del Año
+              </div>
+            </div>
+            <div class="section-body">
+              <div id="top10Wrap"><div class="no-data">⏳ Cargando…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
